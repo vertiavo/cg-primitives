@@ -44,9 +44,13 @@ class Paint(object):
 
         self.drag_data = {"x": 0, "y": 0, "item": None}
 
+        # Primitives moving
         self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonPress-1>", self.on_primitive_press)
         self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonRelease-1>", self.on_primitive_release)
         self.canvas.tag_bind(self.ITEM_TOKEN, "<B1-Motion>", self.on_primitive_motion)
+
+        # Primitives editing with toolbox
+        self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonPress-2>", self.on_primitive_second_edit)
 
         self.cords_toolbox = Frame(self.root)
         self.cords_toolbox.grid(row=1, column=7, sticky=N)
@@ -135,6 +139,11 @@ class Paint(object):
         self.drag_data["x"] = event.x
         self.drag_data["y"] = event.y
 
+    def on_primitive_second_edit(self, event):
+        self.drag_data["item"] = self.canvas.find_closest(event.x, event.y)[0]
+        self.clear_coords()
+        self.insert_editing_primitive_coords()
+
     def select_line(self):
         self.activate_button(self.line_button)
         log_message("Line selected")
@@ -159,21 +168,40 @@ class Paint(object):
         button.config(relief=SUNKEN)
         self.active_button = button
 
-    def reset_coords(self):
+    def clear_coords(self):
         self.x1_entry.delete("0", END)
-        self.x1_entry.insert(END, "0")
         self.y1_entry.delete("0", END)
-        self.y1_entry.insert(END, "0")
         self.x2_entry.delete("0", END)
-        self.x2_entry.insert(END, "0")
         self.y2_entry.delete("0", END)
+
+    def reset_coords(self):
+        self.drag_data["item"] = None
+        self.clear_coords()
+        self.x1_entry.insert(END, "0")
+        self.y1_entry.insert(END, "0")
+        self.x2_entry.insert(END, "0")
         self.y2_entry.insert(END, "0")
         log_message("Coords reset")
+
+    def insert_editing_primitive_coords(self):
+        primitive = self.drag_data["item"]
+        if primitive is not None:
+            (x1, y1, x2, y2) = self.canvas.coords(primitive)
+            self.x1_entry.insert(END, int(x1))
+            self.y1_entry.insert(END, int(y1))
+            self.x2_entry.insert(END, int(x2))
+            self.y2_entry.insert(END, int(y2))
 
     def draw_shape(self):
         self.read_line_size()
         self.read_coords()
-        if self.active_button is self.line_button:
+
+        primitive = self.drag_data["item"]
+        if primitive is not None:
+            self.canvas.coords(primitive, self.x1, self.y1, self.x2, self.y2)
+            self.drag_data["item"] = None
+            self.reset_coords()
+        elif self.active_button is self.line_button:
             self.draw_line()
         elif self.active_button is self.rectangle_button:
             self.draw_rectangle()
