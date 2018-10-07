@@ -1,5 +1,6 @@
 import logging
 from tkinter import *
+from tkinter.colorchooser import askcolor
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -14,6 +15,7 @@ class Paint(object):
 
     def __init__(self):
         self.root = Tk()
+        self.root.title("Paint")
 
         self.line_button = Button(self.root, text="Line", relief=SUNKEN, command=self.select_line)
         self.line_button.grid(row=0, column=0, padx=2, pady=2)
@@ -30,11 +32,14 @@ class Paint(object):
         self.clear_button = Button(self.root, text="Clear", command=self.clear_canvas)
         self.clear_button.grid(row=0, column=4, padx=2, pady=2)
 
+        self.color_button = Button(self.root, text="Choose color", command=self.choose_color)
+        self.color_button.grid(row=0, column=5, padx=2, pady=2)
+
         self.canvas = Canvas(self.root, bg="white", width=500, height=500)
-        self.canvas.grid(row=1, columnspan=5)
+        self.canvas.grid(row=1, columnspan=6)
 
         self.cords_toolbox = Frame(self.root)
-        self.cords_toolbox.grid(row=1, column=6, sticky=N)
+        self.cords_toolbox.grid(row=1, column=7, sticky=N)
 
         self.x1_label = Label(self.cords_toolbox, text="x1")
         self.x1_label.grid(row=0, sticky=E)
@@ -65,13 +70,14 @@ class Paint(object):
         self.y2_entry.grid(row=3, column=1)
 
         self.reset_button = Button(self.cords_toolbox, text="Reset", command=self.reset_coords)
-        self.reset_button.grid(row=4, column=1, sticky=W)
+        self.reset_button.grid(row=5, column=1, sticky=W)
 
         self.draw_button = Button(self.cords_toolbox, text="Draw", command=self.draw_shape)
-        self.draw_button.grid(row=4, column=1, sticky=E)
+        self.draw_button.grid(row=5, column=1, sticky=E)
 
         self.last_action = None
         self.active_button = self.line_button
+        self.color = self.DEFAULT_COLOR
         self.x1 = None
         self.y1 = None
         self.x2 = None
@@ -150,13 +156,13 @@ class Paint(object):
         self.y2 = self.y2_entry.get()
 
     def draw_line(self):
-        line = self.canvas.create_line(self.x1, self.y1, self.x2, self.y2)
+        line = self.canvas.create_line(self.x1, self.y1, self.x2, self.y2, fill=self.color)
         log_message("Line drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = line
 
     def draw_rectangle(self):
-        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.DEFAULT_COLOR)
+        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.color)
         log_message("Rectangle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = rectangle
@@ -167,10 +173,13 @@ class Paint(object):
         x2_ = int(self.x1) + int(self.x2)
         y2_ = int(self.y1) + int(self.x2)
 
-        circle = self.canvas.create_oval(x1_, y1_, x2_, y2_, outline="#f11", fill="#1f1", width=2)
+        circle = self.canvas.create_oval(x1_, y1_, x2_, y2_, fill=self.color, width=2)
         log_message("Circle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = circle
+
+    def choose_color(self):
+        self.color = askcolor(color=self.color)[1]
 
     def undo_action(self):
         self.canvas.delete(self.last_action)
