@@ -1,5 +1,6 @@
 import logging
-from tkinter import *
+from tkinter import Tk, Button, Scale, SUNKEN, DISABLED, HORIZONTAL, Canvas, Frame, Label, Entry, N, E, END, W, RAISED, \
+    NORMAL, ALL
 from tkinter.colorchooser import askcolor
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
@@ -93,10 +94,7 @@ class Paint(object):
         self.active_button = self.line_button
         self.color = self.DEFAULT_COLOR
         self.line_size = self.line_size_scale.get()
-        self.x1 = None
-        self.y1 = None
-        self.x2 = None
-        self.y2 = None
+        self.x1, self.y1, self.x2, self.y2 = None, None, None, None
 
         self.root.mainloop()
 
