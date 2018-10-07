@@ -15,7 +15,7 @@ class Paint(object):
     def __init__(self):
         self.root = Tk()
 
-        self.line_button = Button(self.root, text="Line", command=self.select_line)
+        self.line_button = Button(self.root, text="Line", relief=SUNKEN, command=self.select_line)
         self.line_button.grid(row=0, column=0, padx=2, pady=2)
 
         self.rectangle_button = Button(self.root, text="Rectangle", command=self.select_rectangle)
@@ -72,52 +72,59 @@ class Paint(object):
 
     def setup(self):
         self.last_action = None
-
-    def deactivate_buttons(self):
-        self.line_button.config(state=NORMAL)
-        self.rectangle_button.config(state=NORMAL)
-        self.circle_button.config(state=NORMAL)
+        self.active_button = self.line_button
+        self.x1 = IntVar()
+        self.y1 = IntVar()
+        self.x2 = IntVar()
+        self.y2 = IntVar()
 
     def select_line(self):
-        self.deactivate_buttons()
-        self.line_button.config(state=ACTIVE)
+        self.activate_button(self.line_button)
         log_message("Line selected")
 
     def select_rectangle(self):
-        self.deactivate_buttons()
-        self.rectangle_button.config(state=ACTIVE)
+        self.activate_button(self.rectangle_button)
         log_message("Rectangle selected")
 
     def select_circle(self):
-        self.deactivate_buttons()
-        self.circle_button.config(state=ACTIVE)
+        self.activate_button(self.circle_button)
         log_message("Circle selected")
 
+    def activate_button(self, button):
+        self.active_button.config(relief=RAISED)
+        button.config(relief=SUNKEN)
+        self.active_button = button
+
     def draw_shape(self):
-        if self.line_button["state"] is ACTIVE:
+        self.read_coords()
+        if self.active_button is self.line_button:
             self.draw_line()
-        elif self.rectangle_button["state"] is ACTIVE:
+        elif self.active_button is self.rectangle_button:
             self.draw_rectangle()
-        elif self.circle_button["state"] is ACTIVE:
+        elif self.active_button is self.circle_button:
             self.draw_circle()
 
+    def read_coords(self):
+        self.x1 = self.x1_entry.get()
+        self.y1 = self.y1_entry.get()
+        self.x2 = self.x2_entry.get()
+        self.y2 = self.y2_entry.get()
+
     def draw_line(self):
-        line = self.canvas.create_line(self.x1_entry, self.y1_entry, self.x2_entry, self.y2_entry)
-        log_message("Draw line")
+        line = self.canvas.create_line(self.x1, self.y1, self.x2, self.y2)
+        log_message("Line drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = line
 
     def draw_rectangle(self):
-        rectangle = self.canvas.create_rectangle(self.x1_entry, self.y1_entry, self.x2_entry, self.y2_entry,
-                                                 fill="green")
-        log_message("Draw rectangle")
+        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill="green")
+        log_message("Rectangle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = rectangle
 
     def draw_circle(self):
-        circle = self.canvas.create_oval(self.x1_entry, self.y1_entry, self.x2_entry, self.y2_entry, outline="#f11",
-                                         fill="#1f1", width=2)
-        log_message("Draw circle")
+        circle = self.canvas.create_oval(self.x1, self.y1, self.x2, self.y2, outline="#f11", fill="#1f1", width=2)
+        log_message("Circle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = circle
 
@@ -128,7 +135,7 @@ class Paint(object):
 
     def clear_canvas(self):
         self.canvas.delete(ALL)
-        log_message("Clear canvas")
+        log_message("Canvas cleared")
         self.undo_button.config(state=DISABLED)
 
 
