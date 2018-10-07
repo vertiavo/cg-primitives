@@ -1,5 +1,5 @@
-from tkinter import *
 import logging
+from tkinter import *
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -64,8 +64,11 @@ class Paint(object):
         self.y2_entry.insert(END, "0")
         self.y2_entry.grid(row=3, column=1)
 
+        self.reset_button = Button(self.cords_toolbox, text="Reset", command=self.reset_coords)
+        self.reset_button.grid(row=4, column=1, sticky=W)
+
         self.draw_button = Button(self.cords_toolbox, text="Draw", command=self.draw_shape)
-        self.draw_button.grid(row=4, columnspan=2)
+        self.draw_button.grid(row=4, column=1, sticky=E)
 
         self.last_action = None
         self.active_button = self.line_button
@@ -119,6 +122,17 @@ class Paint(object):
         self.active_button.config(relief=RAISED)
         button.config(relief=SUNKEN)
         self.active_button = button
+
+    def reset_coords(self):
+        self.x1_entry.delete("0", END)
+        self.x1_entry.insert(END, "0")
+        self.y1_entry.delete("0", END)
+        self.y1_entry.insert(END, "0")
+        self.x2_entry.delete("0", END)
+        self.x2_entry.insert(END, "0")
+        self.y2_entry.delete("0", END)
+        self.y2_entry.insert(END, "0")
+        log_message("Coords reset")
 
     def draw_shape(self):
         self.read_coords()
