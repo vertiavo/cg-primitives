@@ -33,50 +33,68 @@ class Paint(object):
         self.canvas = Canvas(self.root, bg="white", width=500, height=500)
         self.canvas.grid(row=1, columnspan=5)
 
-        self.cords_toolbar = Frame(self.root)
-        self.cords_toolbar.grid(row=1, column=6, sticky=N)
+        self.cords_toolbox = Frame(self.root)
+        self.cords_toolbox.grid(row=1, column=6, sticky=N)
 
-        self.x1_label = Label(self.cords_toolbar, text="x1")
+        self.x1_label = Label(self.cords_toolbox, text="x1")
         self.x1_label.grid(row=0, sticky=E)
 
-        self.x1_entry = Entry(self.cords_toolbar)
+        self.x1_entry = Entry(self.cords_toolbox)
         self.x1_entry.insert(END, "0")
         self.x1_entry.grid(row=0, column=1)
 
-        self.y1_label = Label(self.cords_toolbar, text="y1")
+        self.y1_label = Label(self.cords_toolbox, text="y1")
         self.y1_label.grid(row=1, sticky=E)
 
-        self.y1_entry = Entry(self.cords_toolbar)
+        self.y1_entry = Entry(self.cords_toolbox)
         self.y1_entry.insert(END, "0")
         self.y1_entry.grid(row=1, column=1)
 
-        self.x2_label = Label(self.cords_toolbar, text="x2")
+        self.x2_label = Label(self.cords_toolbox, text="x2")
         self.x2_label.grid(row=2, sticky=E)
 
-        self.x2_entry = Entry(self.cords_toolbar)
+        self.x2_entry = Entry(self.cords_toolbox)
         self.x2_entry.insert(END, "0")
         self.x2_entry.grid(row=2, column=1)
 
-        self.y2_label = Label(self.cords_toolbar, text="y2")
+        self.y2_label = Label(self.cords_toolbox, text="y2")
         self.y2_label.grid(row=3, sticky=E)
 
-        self.y2_entry = Entry(self.cords_toolbar)
+        self.y2_entry = Entry(self.cords_toolbox)
         self.y2_entry.insert(END, "0")
         self.y2_entry.grid(row=3, column=1)
 
-        self.draw_button = Button(self.cords_toolbar, text="Draw", command=self.draw_shape)
+        self.draw_button = Button(self.cords_toolbox, text="Draw", command=self.draw_shape)
         self.draw_button.grid(row=4, columnspan=2)
 
-        self.setup()
-        self.root.mainloop()
-
-    def setup(self):
         self.last_action = None
         self.active_button = self.line_button
-        self.x1 = IntVar()
-        self.y1 = IntVar()
-        self.x2 = IntVar()
-        self.y2 = IntVar()
+        self.x1 = None
+        self.y1 = None
+        self.x2 = None
+        self.y2 = None
+
+        self.root.mainloop()
+
+    def set_common_toolbox(self):
+        self.x1_label.config(text="x1")
+        self.y1_label.config(text="y1")
+        self.x2_label.config(text="x2")
+
+        self.y2_label = Label(self.cords_toolbox, text="y2")
+        self.y2_label.grid(row=3, sticky=E)
+
+        self.y2_entry = Entry(self.cords_toolbox)
+        self.y2_entry.insert(END, "0")
+        self.y2_entry.grid(row=3, column=1)
+
+    def set_circle_toolbox(self):
+        self.x1_label.config(text="x")
+        self.y1_label.config(text="y")
+        self.x2_label.config(text="r")
+
+        self.y2_label.grid_forget()
+        self.y2_entry.grid_forget()
 
     def select_line(self):
         self.activate_button(self.line_button)
@@ -91,6 +109,13 @@ class Paint(object):
         log_message("Circle selected")
 
     def activate_button(self, button):
+        # If active button is either line or rectangle and now user selects circle then change toolbox to circle
+        if (self.active_button is self.line_button or self.rectangle_button) and button is self.circle_button:
+            self.set_circle_toolbox()
+        # If active button is circle and now user selects others then change toolbox to common
+        elif self.active_button is self.circle_button and button is not self.circle_button:
+            self.set_common_toolbox()
+
         self.active_button.config(relief=RAISED)
         button.config(relief=SUNKEN)
         self.active_button = button
@@ -117,13 +142,18 @@ class Paint(object):
         self.last_action = line
 
     def draw_rectangle(self):
-        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill="green")
+        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.DEFAULT_COLOR)
         log_message("Rectangle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = rectangle
 
     def draw_circle(self):
-        circle = self.canvas.create_oval(self.x1, self.y1, self.x2, self.y2, outline="#f11", fill="#1f1", width=2)
+        x1_ = int(self.x1) - int(self.x2)
+        y1_ = int(self.y1) - int(self.x2)
+        x2_ = int(self.x1) + int(self.x2)
+        y2_ = int(self.y1) + int(self.x2)
+
+        circle = self.canvas.create_oval(x1_, y1_, x2_, y2_, outline="#f11", fill="#1f1", width=2)
         log_message("Circle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = circle
