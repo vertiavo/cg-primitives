@@ -12,6 +12,7 @@ def log_message(action):
 class Paint(object):
     DEFAULT_COLOR = "black"
     DEFAULT_LINE_SIZE = 1
+    ITEM_TOKEN = "primitive"
 
     def __init__(self):
         self.root = Tk()
@@ -35,8 +36,17 @@ class Paint(object):
         self.color_button = Button(self.root, text="Choose color", command=self.choose_color)
         self.color_button.grid(row=0, column=5, padx=2, pady=2)
 
-        self.canvas = Canvas(self.root, bg="white", width=500, height=500)
-        self.canvas.grid(row=1, columnspan=6)
+        self.line_size_scale = Scale(self.root, label="Line size", from_=1, to=10, orient=HORIZONTAL)
+        self.line_size_scale.grid(row=0, column=6, padx=2, pady=2)
+
+        self.canvas = Canvas(self.root, bg="white", width=600, height=500)
+        self.canvas.grid(row=1, columnspan=7)
+
+        self.drag_data = {"x": 0, "y": 0, "item": None}
+
+        self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonPress-1>", self.on_primitive_press)
+        self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonRelease-1>", self.on_primitive_release)
+        self.canvas.tag_bind(self.ITEM_TOKEN, "<B1-Motion>", self.on_primitive_motion)
 
         self.cords_toolbox = Frame(self.root)
         self.cords_toolbox.grid(row=1, column=7, sticky=N)
@@ -78,6 +88,7 @@ class Paint(object):
         self.last_action = None
         self.active_button = self.line_button
         self.color = self.DEFAULT_COLOR
+        self.line_size = self.line_size_scale.get()
         self.x1 = None
         self.y1 = None
         self.x2 = None
@@ -104,6 +115,25 @@ class Paint(object):
 
         self.y2_label.grid_forget()
         self.y2_entry.grid_forget()
+
+    def on_primitive_press(self, event):
+        self.drag_data["x"] = event.x
+        self.drag_data["y"] = event.y
+        self.drag_data["item"] = self.canvas.find_closest(event.x, event.y)[0]
+
+    def on_primitive_release(self, event):
+        self.drag_data["x"] = 0
+        self.drag_data["y"] = 0
+        self.drag_data["item"] = None
+
+    def on_primitive_motion(self, event):
+        delta_x = event.x - self.drag_data["x"]
+        delta_y = event.y - self.drag_data["y"]
+
+        self.canvas.move(self.drag_data["item"], delta_x, delta_y)
+
+        self.drag_data["x"] = event.x
+        self.drag_data["y"] = event.y
 
     def select_line(self):
         self.activate_button(self.line_button)
@@ -141,6 +171,7 @@ class Paint(object):
         log_message("Coords reset")
 
     def draw_shape(self):
+        self.read_line_size()
         self.read_coords()
         if self.active_button is self.line_button:
             self.draw_line()
@@ -149,6 +180,9 @@ class Paint(object):
         elif self.active_button is self.circle_button:
             self.draw_circle()
 
+    def read_line_size(self):
+        self.line_size = self.line_size_scale.get()
+
     def read_coords(self):
         self.x1 = self.x1_entry.get()
         self.y1 = self.y1_entry.get()
@@ -156,13 +190,15 @@ class Paint(object):
         self.y2 = self.y2_entry.get()
 
     def draw_line(self):
-        line = self.canvas.create_line(self.x1, self.y1, self.x2, self.y2, fill=self.color)
+        line = self.canvas.create_line(self.x1, self.y1, self.x2, self.y2, fill=self.color, width=self.line_size,
+                                       tags=self.ITEM_TOKEN)
         log_message("Line drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = line
 
     def draw_rectangle(self):
-        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.color)
+        rectangle = self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.color,
+                                                 width=self.line_size, tags=self.ITEM_TOKEN)
         log_message("Rectangle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = rectangle
@@ -173,13 +209,15 @@ class Paint(object):
         x2_ = int(self.x1) + int(self.x2)
         y2_ = int(self.y1) + int(self.x2)
 
-        circle = self.canvas.create_oval(x1_, y1_, x2_, y2_, fill=self.color, width=2)
+        circle = self.canvas.create_oval(x1_, y1_, x2_, y2_, fill=self.color, width=self.line_size,
+                                         tags=self.ITEM_TOKEN)
         log_message("Circle drawn")
         self.undo_button.config(state=NORMAL)
         self.last_action = circle
 
     def choose_color(self):
         self.color = askcolor(color=self.color)[1]
+        log_message("Color selected")
 
     def undo_action(self):
         self.canvas.delete(self.last_action)
