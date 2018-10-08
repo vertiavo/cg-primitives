@@ -51,7 +51,7 @@ class Paint(object):
         self.canvas.tag_bind(self.ITEM_TOKEN, "<B1-Motion>", self.on_primitive_motion)
 
         # Primitives editing with toolbox
-        self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonPress-2>", self.on_primitive_second_edit)
+        self.canvas.tag_bind(self.ITEM_TOKEN, "<ButtonPress-3>", self.on_primitive_second_edit)
 
         self.cords_toolbox = Frame(self.root)
         self.cords_toolbox.grid(row=1, column=7, sticky=N)
@@ -197,6 +197,7 @@ class Paint(object):
         primitive = self.drag_data["item"]
         if primitive is not None:
             self.canvas.coords(primitive, self.x1, self.y1, self.x2, self.y2)
+            self.canvas.itemconfig(primitive, width=self.line_size)
             self.drag_data["item"] = None
             self.reset_coords()
         elif self.active_button is self.line_button:
